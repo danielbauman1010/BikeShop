@@ -133,19 +133,19 @@ public class Order implements Comparable{
     @Override
     public String toString() {  
         if(isDone) {
-            return orderNumber + " - customer number=" + customerNumber 
-                    + ", order date=" + this.formattDate(orderDate)
-                    + ", promise state=" + promiseState 
-                    + ", completion date=" + this.formattDate(completionDate) 
-                    + ", repair price=" + repairPrice.getPrice()
-                    + ", comments=" + comments;
+            return "Order #" +orderNumber + " from customer number #" + customerNumber 
+                    + " at " + this.formattDate(orderDate)
+                    + "\n\t ,status: " + promiseState 
+                    + ", completed at " + this.formattDate(completionDate) + "\n\t"
+                    + " ,with the price of " + repairPrice.getPrice() + "$" + "\n\t"
+                    + " ,additional comments are: " + comments;
         }
-        return orderNumber + " - customer number=" + customerNumber 
-                + ", order date=" + this.formattDate(orderDate)
-                + ", promise state=" + promiseState 
-                + ", due date=" + this.formattDate(dueDate) 
-                + ", repair price=" + repairPrice.getPrice()
-                + ", comments=" + comments;
+        return "Order #" +orderNumber + " from customer number #" + customerNumber 
+                + " at " + this.formattDate(orderDate)
+                + "\n\t ,status: " + promiseState 
+                + ", due date is " + this.formattDate(completionDate) + "\n\t"
+                + " ,with the price of " + repairPrice.getPrice() + "$" + "\n\t"
+                + " ,additional comments are: " + comments;
     }
 
     @Override

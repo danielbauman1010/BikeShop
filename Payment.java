@@ -47,7 +47,8 @@ public class Payment implements Comparable{
     
     @Override
     public String toString() {
-        return "amount=" + amount + ", date=" + this.formattDate(date) + ", customer number=" + customerNumber;
+        return "Payment from customer #" + this.getCustomerNumber() + " at " +
+                this.formattDate(this.getDate()) + ", amount payed: " + this.getAmount() + "$";
     }
 
     @Override

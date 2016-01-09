@@ -82,11 +82,14 @@ public class BikeShop {
         this.commands.add(c);
     }
     
-    public LocalDate formatDate(String unforamttedDate){
-        String[] partsOfDate = unforamttedDate.split("/");
-        int month = Integer.parseInt(partsOfDate[0]);
-        int day = Integer.parseInt(partsOfDate[1]);
-        int year = Integer.parseInt(partsOfDate[2]);
+    public LocalDate formatDate(String unforamttedDate){        
+        char[] partsOfDate = unforamttedDate.toCharArray();
+        String monthString = "" + partsOfDate[0]+partsOfDate[1]; 
+        int month = Integer.parseInt(monthString);
+        String dayString = "" + partsOfDate[2]+partsOfDate[3];
+        int day = Integer.parseInt(dayString);
+        String yearString = "" + partsOfDate[4]+partsOfDate[5]+partsOfDate[6]+partsOfDate[7];
+        int year = Integer.parseInt(yearString);
         LocalDate date = LocalDate.of(year, month, day);
         return date;
     }
@@ -207,16 +210,19 @@ public class BikeShop {
         System.out.println("");
         System.out.println("    addrp brand level price days - Add Repair Price");
         System.out.println("    addc firstname lastname - Add Customer");
-        System.out.println("    addo customerNumber date(mm/dd/yyyy) brand level comments - Add Order");
-        System.out.println("    addp customerNumber date(mm/dd/yyyy) amount - Add payment");
-        System.out.println("    comp OrderNumber completionDate(mm/dd/yyyy) - mark order orderNumber completed");
+        System.out.println("    addo customerNumber date(mmddyyyy) brand level comments - Add Order");
+        System.out.println("    addp customerNumber date(mmddyyyy) amount - Add payment");
+        System.out.println("    comp OrderNumber completionDate(mmddyyyy) - mark order orderNumber completed");
         System.out.println("");
         System.out.println("    printrp - Print Repair Prices");
         System.out.println("    printcnum - Print Customers by Customer Number");
         System.out.println("    printcname - Print Customers by Customer Name");
         System.out.println("    printo - print orders");
         System.out.println("    printp - prints payments");
-        System.out.println("    printt - print transactions");   
+        System.out.println("    printt - print transactions");  
+        System.out.println("");
+        System.out.println("    printr - prints recieveable");
+        System.out.println("    prints - prints statements");
         System.out.println("");
         System.out.println("    readc filename - Read commands from disk file filename");
         System.out.println("    savebs filename - save Bike Shop as file of commands in file filename");
@@ -326,17 +332,21 @@ public class BikeShop {
             Order[] ordersByDate = this.sortByDateOrders(orders.values());
             for (Order order: ordersByDate) {
                 System.out.println(order);
+                System.out.println("");
             }
         } else if(command.equals("printp")) {
             Payment[] paymentsByDate = this.sortByDatePayment(payments);
             for (Payment p: paymentsByDate) {
                 System.out.println(p);
+                System.out.println("");
             }
         } else if(command.equals("printt")) {
             ArrayList<Comparable> sortedTransactions= sortByDateBoth(orders.values(), payments);
             System.out.println("Transactions by Date: (orders and payments)");
+            System.out.println("");
             for (Comparable transaction: sortedTransactions) {
                 System.out.println(transaction);
+                System.out.println("");
             }
         } else if(command.startsWith("readc")) {
             String[] atrForReadc = command.split(" ");
@@ -400,14 +410,76 @@ public class BikeShop {
             } catch (IOException ex) {
                 System.out.println("couldn't restore from file");
             }
-        } 
+        } else if(command.startsWith("printr")) {
+            System.out.println("Customer Name\tCustomer#\tDue/Account\tNumber Of Transactions");
+            System.out.println("");
+            Integer[] orderedCustomerNumbers = sortIntegerSet(cusomters.keySet());
+            for (int cn: orderedCustomerNumbers) {
+                int nOfOrders = 0;
+                int nOfPayments = 0;
+                int due = 0;
+                for (Order o: this.orders.values()) {
+                    if(o.getCustomerNumber() == cn) {
+                        due -= o.getRepairPrice().getPrice();
+                        nOfOrders++;
+                    }                        
+                }
+                for (Payment p: payments) { 
+                    if (p.getCustomerNumber() == cn) {
+                        due += p.getAmount();
+                        nOfPayments++;
+                    }
+                }
+                int nOfTransactions = nOfOrders + nOfPayments;
+                System.out.println(this.cusomters.get(cn) + "\t" + cn + "\t\t" + due + "$" +
+                        "\t\t" + nOfTransactions);
+                System.out.println("");
+            }
+        } else if(command.equals("prints")) {
+            System.out.println("Statements: (customer# + customer -> transactions + due"); 
+            Integer[] orderedCustomerNumbers = sortIntegerSet(cusomters.keySet());
+            for (int cn: orderedCustomerNumbers) {
+                Collection<Order> ordersByCurrentCustomer = new ArrayList();
+                ArrayList<Payment> paymentsByCurrentCustomer = new ArrayList();
+                int nOfOrders = 0;
+                int nOfPayments = 0;
+                int due = 0;
+                for (Order o: this.orders.values()) {
+                    if(o.getCustomerNumber() == cn) {
+                        due -= o.getRepairPrice().getPrice();
+                        nOfOrders++;
+                        ordersByCurrentCustomer.add(o);
+                    }                        
+                }
+                for (Payment p: payments) { 
+                    if (p.getCustomerNumber() == cn) {
+                        due += p.getAmount();
+                        nOfPayments++;
+                        paymentsByCurrentCustomer.add(p);
+                    }
+                }
+                int nOfTransactions = nOfOrders + nOfPayments;
+                ArrayList<Comparable> sortedTransactions= sortByDateBoth(ordersByCurrentCustomer, 
+                        paymentsByCurrentCustomer);
+                System.out.println("#" + cn +
+                        " " + cusomters.get(cn).toString() +
+                        " is accounted for " + due + "$" +
+                        " for the following transactions: " + 
+                        "\n");
+                sortedTransactions.forEach((transaction) -> {
+                    System.out.println(transaction);
+                    System.out.println("");
+                });
+                
+            }
+        }
     }
     
     public static void main(String[] args) {        
         BikeShop shop = new BikeShop();
         shop.help();
         Scanner in = new Scanner(System.in);
-        System.out.println("");
+        System.out.println("");       
         while(shop.shouldRun()) {
             String newCommand = in.nextLine();                        
             shop.processCommand(newCommand,false);                                    
